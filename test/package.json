@@ -1,0 +1,12 @@
+{
+  "name": "course-splitter-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Regression suite for the Course Splitter app. The app itself has no dependencies; these tests drive it in a headless browser.",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

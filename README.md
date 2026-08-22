@@ -39,6 +39,19 @@ tricky corner in the preview.
 Open `index.html` — that's the whole app. A single self-contained file with no
 build step and no dependencies.
 
+## Tests
+
+A regression suite lives in `test/`. It drives the real page in a headless
+browser and checks the real outputs — reduction, splitting and overlap, ascent
+against profiles with known true climb, GPX output format, preview rendering,
+and that nothing ever reaches the network.
+
+```sh
+cd test && npm install && npm test
+```
+
+See `test/README.md` for what each group guards and why.
+
 ## Fonts
 
 Barlow Condensed and IBM Plex are embedded as subsetted WOFF2. Both are
