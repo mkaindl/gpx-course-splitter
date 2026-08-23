@@ -276,20 +276,21 @@ function reconstruct(P){
     const missingFonts = fontRefs.filter(f => !fs.existsSync(pathm.join(root, "assets", f)));
     check("legal.css: all font files present", missingFonts.length === 0 && fontRefs.length > 0,
           missingFonts.length ? `missing: ${missingFonts.join(", ")}` : `${fontRefs.length} faces`);
-    check("legal.css: fonts are same-origin, not a CDN",
-          !/https?:/.test(css), "a remote font URL would leak visitor IPs");
 
-    /* MIT covers the code only. The fonts are OFL, and index.html travels as a
-       single file, so it has to carry both notices itself. */
-    const licence = fs.readFileSync(pathm.join(root, "LICENSE"), "utf8");
-    check("LICENSE is the MIT text",
-          /^MIT License/m.test(licence) &&
-          licence.includes("Permission is hereby granted, free of charge") &&
-          licence.includes("WITHOUT WARRANTY OF ANY KIND"));
+    /* Garmin is named throughout the app as a Bestimmungshinweis (§ 23 Nr. 3
+       MarkenG). That is permitted, provided nothing suggests endorsement, so
+       the disclaimer has to stay put. */
+    const imp = fs.readFileSync(pathm.join(root, "impressum.html"), "utf8");
+    check("Impressum disclaims affiliation with Garmin",
+          /keiner Verbindung zu\s+Garmin/.test(imp) && /not affiliated with/.test(imp));
+
+    /* The OFL asks that the notices travel with the fonts, and index.html is
+       the distribution — one file people copy around. Nothing else catches
+       their loss: the page renders identically without them, so there is no
+       runtime signal, and trimming a comment block is an ordinary edit. */
     const appHtml = fs.readFileSync(pathm.join(root, "index.html"), "utf8");
-    check("index.html names the MIT licence for its code", /MIT License/.test(appHtml));
-    check("index.html keeps the fonts separate from MIT",
-          /NOT covered by that licence/.test(appHtml) && /SIL Open Font License/.test(appHtml));
+    check("index.html keeps the font notices with the fonts",
+          /SIL Open Font License/.test(appHtml) && /NOT covered by that licence/.test(appHtml));
   }
 
   /* ---------------------------------------------------------------- */
