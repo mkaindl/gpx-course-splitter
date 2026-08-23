@@ -260,6 +260,14 @@ function reconstruct(P){
       const todo = await page.$$eval(".todo", els => els.map(e => e.textContent.trim().slice(0, 50)));
       check(`${name}: nothing left to fill in`, todo.length === 0, todo.join(" | "));
 
+      /* The address is assembled by script and has no markup fallback, so a
+         page that ships without it shows a placeholder sentence and nothing. */
+      const mail = await page.$eval("#mail", el => {
+        const a = el.querySelector('a[href^="mailto:"]');
+        return a && a.textContent.includes("@") ? a.getAttribute("href") : null;
+      }).catch(() => null);
+      check(`${name}: contact address renders`, !!mail, mail || "no mailto link in #mail");
+
       track(page); await page.close();
     }
 

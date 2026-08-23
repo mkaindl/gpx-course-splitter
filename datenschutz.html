@@ -21,15 +21,12 @@
 <section>
   <h2>1 — Verantwortlicher</h2>
   <address>
-    [VOLLSTÄNDIGER VOR- UND NACHNAME]<br>
-    [STRASSE UND HAUSNUMMER]<br>
-    [PLZ UND ORT]<br>
+    Maximilian Kaindl<br>
+    Griesstetter Straße 6<br>
+    92345 Dietfurt<br>
     Deutschland
   </address>
-  <p>E-Mail: <span id="mail">[wird angezeigt, sobald JavaScript aktiv ist]</span></p>
-  <noscript><p>E-Mail: [BENUTZERNAME] [at] [DOMAIN] [punkt] [TLD]</p></noscript>
-  <p class="note todo"><b>Noch auszufüllen</b> — dieselben Angaben wie im
-  <a href="impressum.html">Impressum</a>.</p>
+  <p>E-Mail: <span id="mail">wird angezeigt, sobald JavaScript aktiv ist</span></p>
 </section>
 
 <section>
@@ -92,8 +89,7 @@
 
 <section>
   <h2>6 — Stand</h2>
-  <p>Diese Erklärung gilt ab dem [DATUM DER VERÖFFENTLICHUNG]. Bei Änderungen an der Website
-  wird sie angepasst.</p>
+  <p>Stand: August 2026. Bei Änderungen an der Website wird diese Erklärung angepasst.</p>
 </section>
 
 <p class="lang">English</p>
@@ -116,20 +112,6 @@
 </footer>
 
 </div>
-<script>
-(function(){
-  /* base64 of the local part and the domain — replace both when filling in
-     the contact address. Nothing secret here; the encoding exists only to
-     keep the address out of reach of scrapers that read the raw HTML. */
-  var u = atob("W0JFTlVUWkVSTkFNRV0=");
-  var d = atob("W0RPTUFJTl0uW1RMRF0=");
-  var a = document.createElement("a");
-  a.href = "mailto:" + u + "@" + d;
-  a.textContent = u + "@" + d;
-  var slot = document.getElementById("mail");
-  slot.textContent = "";
-  slot.appendChild(a);
-})();
-</script>
+<script src="assets/mail.js"></script>
 </body>
 </html>

@@ -54,9 +54,7 @@ See `test/README.md` for what each group guards and why.
 
 ## Licence
 
-The application code is under the **MIT License** — see `LICENSE`. The
-copyright line still reads `[YOUR FULL NAME]`; the test suite fails until it
-is filled in, alongside the legal pages.
+The application code is under the **MIT License** — see `LICENSE`.
 
 The embedded fonts are **not** covered by MIT. Barlow Condensed and IBM Plex
 are subsetted WOFF2 under the **SIL Open Font License 1.1**, and the notices in
@@ -66,13 +64,23 @@ file goes. `index.html` is self-contained, so it carries both notices itself.
 ## Legal pages
 
 `impressum.html` and `datenschutz.html` are required of German site operators
-(§ 18 Abs. 1 MStV and Art. 13 GDPR). **They still contain placeholders** — the
-test suite fails until they are filled in, on purpose: publishing an Impressum
-that reads `[VOLLSTÄNDIGER VOR- UND NACHNAME]` is worse than publishing none.
+(§ 18 Abs. 1 MStV and Art. 13 GDPR), and are linked from an always-visible
+footer — the disclaimer footer appears only after a file is loaded, which would
+not meet the "ständig verfügbar" requirement these links carry.
 
-Fill in name, street address, postal code and town in both files, the date in
-`datenschutz.html`, and the base64 e-mail parts plus the `<noscript>` fallback
-in the script block at the bottom of each page. Then `npm test` goes green.
+Both carry `noindex`, which keeps the contact details out of search results
+without affecting the legal duty (that is about a visitor reaching the page,
+not about being indexed). That covers the deployed pages only: if this
+repository is ever made public, the same files stay readable — and indexable —
+through GitHub's own file view.
+
+The e-mail address is assembled in `assets/mail.js` from base64 parts and
+appears nowhere in the markup, so an address regex over the raw HTML finds
+nothing. The postal address stays selectable text — it has to remain readable
+for screen readers, and an image would be OCR'd anyway.
+
+A publish gate in the test suite fails on a leftover `[PLACEHOLDER]`, or on any
+content still marked `.todo`.
 
 ## Disclaimer
 

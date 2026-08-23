@@ -23,20 +23,16 @@
 <section>
   <h2>Anbieter</h2>
   <address>
-    <span id="nm">[VOLLSTÄNDIGER VOR- UND NACHNAME]</span><br>
-    [STRASSE UND HAUSNUMMER]<br>
-    [PLZ UND ORT]<br>
+    Maximilian Kaindl<br>
+    Griesstetter Straße 6<br>
+    92345 Dietfurt<br>
     Deutschland
   </address>
-  <p class="note todo"><b>Noch auszufüllen.</b> Die Anschrift muss ladungsfähig sein — also eine
-  Adresse, unter der eine Zustellung durch einen Gerichtsvollzieher tatsächlich möglich ist.
-  Ein Postfach genügt dafür nicht.</p>
 </section>
 
 <section>
   <h2>Kontakt</h2>
-  <p>E-Mail: <span id="mail">[wird angezeigt, sobald JavaScript aktiv ist]</span></p>
-  <noscript><p>E-Mail: <span id="mailfallback">[BENUTZERNAME] [at] [DOMAIN] [punkt] [TLD]</span></p></noscript>
+  <p>E-Mail: <span id="mail">wird angezeigt, sobald JavaScript aktiv ist</span></p>
 </section>
 
 <section>
@@ -108,25 +104,6 @@
 </footer>
 
 </div>
-<script>
-/* The address is deliberately plain text: it has to stay readable for screen
-   readers and it is what the law asks to be plainly available. The e-mail is
-   the part harvesters actually want, so it is assembled at runtime. This stops
-   the regex-over-raw-HTML scrapers that make up the bulk of address harvesting;
-   it does not stop a headless browser, and nothing served publicly can. */
-(function(){
-  /* base64 of the local part and the domain — replace both when filling in
-     the contact address. Nothing secret here; the encoding exists only to
-     keep the address out of reach of scrapers that read the raw HTML. */
-  var u = atob("W0JFTlVUWkVSTkFNRV0=");
-  var d = atob("W0RPTUFJTl0uW1RMRF0=");
-  var a = document.createElement("a");
-  a.href = "mailto:" + u + "@" + d;
-  a.textContent = u + "@" + d;
-  var slot = document.getElementById("mail");
-  slot.textContent = "";
-  slot.appendChild(a);
-})();
-</script>
+<script src="assets/mail.js"></script>
 </body>
 </html>
