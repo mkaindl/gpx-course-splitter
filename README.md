@@ -52,11 +52,16 @@ cd test && npm install && npm test
 
 See `test/README.md` for what each group guards and why.
 
-## Fonts
+## Licence
 
-Barlow Condensed and IBM Plex are embedded as subsetted WOFF2. Both are
-licensed under the SIL Open Font License 1.1; the notices are in the file
-header.
+The application code is under the **MIT License** — see `LICENSE`. The
+copyright line still reads `[YOUR FULL NAME]`; the test suite fails until it
+is filled in, alongside the legal pages.
+
+The embedded fonts are **not** covered by MIT. Barlow Condensed and IBM Plex
+are subsetted WOFF2 under the **SIL Open Font License 1.1**, and the notices in
+the header of `index.html` and in `assets/` must stay with them wherever the
+file goes. `index.html` is self-contained, so it carries both notices itself.
 
 ## Legal pages
 

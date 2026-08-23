@@ -278,6 +278,18 @@ function reconstruct(P){
           missingFonts.length ? `missing: ${missingFonts.join(", ")}` : `${fontRefs.length} faces`);
     check("legal.css: fonts are same-origin, not a CDN",
           !/https?:/.test(css), "a remote font URL would leak visitor IPs");
+
+    /* MIT covers the code only. The fonts are OFL, and index.html travels as a
+       single file, so it has to carry both notices itself. */
+    const licence = fs.readFileSync(pathm.join(root, "LICENSE"), "utf8");
+    check("LICENSE is the MIT text",
+          /^MIT License/m.test(licence) &&
+          licence.includes("Permission is hereby granted, free of charge") &&
+          licence.includes("WITHOUT WARRANTY OF ANY KIND"));
+    const appHtml = fs.readFileSync(pathm.join(root, "index.html"), "utf8");
+    check("index.html names the MIT licence for its code", /MIT License/.test(appHtml));
+    check("index.html keeps the fonts separate from MIT",
+          /NOT covered by that licence/.test(appHtml) && /SIL Open Font License/.test(appHtml));
   }
 
   /* ---------------------------------------------------------------- */
@@ -287,7 +299,7 @@ function reconstruct(P){
   section("Publish gate");
   {
     const fs = require("fs"), pathm = require("path");
-    for(const name of ["impressum.html", "datenschutz.html"]){
+    for(const name of ["impressum.html", "datenschutz.html", "LICENSE"]){
       const html = fs.readFileSync(pathm.join(__dirname, "..", name), "utf8");
       const left = [...new Set((html.match(/\[[A-ZÄÖÜ][A-ZÄÖÜ0-9 .\-]*\]/g) || []))];
       check(`${name}: no unfilled placeholders`, left.length === 0,
