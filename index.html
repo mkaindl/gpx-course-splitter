@@ -220,6 +220,12 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2.5px solid var(--
 .hidden{display:none}
 footer{padding:26px 0 10px;font-family:"IBM Plex Mono",monospace;font-size:11px;
   letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+/* Legal links stay visible from the first paint. The disclaimer above them is
+   revealed only once a file is loaded, which would not satisfy the "ständig
+   verfügbar" requirement these links have to meet. */
+#legal{display:flex;gap:20px;padding:20px 0 10px}
+#legal a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid var(--rule)}
+#legal a:hover{color:var(--route);border-bottom-color:var(--route)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -330,6 +336,7 @@ footer{padding:26px 0 10px;font-family:"IBM Plex Mono",monospace;font-size:11px;
 </section>
 
 <footer class="hidden" id="foot">Provided as is, with no warranty of any kind. Output is not guaranteed to be correct or complete — check every course against your original route before you set off, and carry a backup means of navigation. You use this at your own risk.</footer>
+<footer id="legal"><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></footer>
 </div>
 
 <script>

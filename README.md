@@ -58,6 +58,17 @@ Barlow Condensed and IBM Plex are embedded as subsetted WOFF2. Both are
 licensed under the SIL Open Font License 1.1; the notices are in the file
 header.
 
+## Legal pages
+
+`impressum.html` and `datenschutz.html` are required of German site operators
+(§ 18 Abs. 1 MStV and Art. 13 GDPR). **They still contain placeholders** — the
+test suite fails until they are filled in, on purpose: publishing an Impressum
+that reads `[VOLLSTÄNDIGER VOR- UND NACHNAME]` is worse than publishing none.
+
+Fill in name, street address, postal code and town in both files, the date in
+`datenschutz.html`, and the base64 e-mail parts plus the `<noscript>` fallback
+in the script block at the bottom of each page. Then `npm test` goes green.
+
 ## Disclaimer
 
 Provided as is, with no warranty of any kind. Output is not guaranteed to be

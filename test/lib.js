@@ -78,9 +78,11 @@ function length(P){ let L = 0; for(let i = 1; i < P.length; i++) L += hop(P[i-1]
 function gaps(P){ const g = []; for(let i = 1; i < P.length; i++) g.push(hop(P[i-1], P[i])); return g; }
 
 /* ---------------- page driver ---------------- */
-const APP = "file://" + path.resolve(__dirname, "..", "index.html");
+const fileUrl = name => "file://" + path.resolve(__dirname, "..", name);
 
-async function openApp(browser){
+const openApp = browser => openPage(browser, "index.html");
+
+async function openPage(browser, name){
   const page = await browser.newPage({viewport: {width: 900, height: 1200}});
   const offences = [];                       // any request that leaves the machine
   page.on("request", r => {
@@ -89,7 +91,7 @@ async function openApp(browser){
   });
   page.on("pageerror", e => offences.push("pageerror: " + e.message));
   page.on("console", m => { if(m.type() === "error") offences.push("console error: " + m.text()); });
-  await page.goto(APP);
+  await page.goto(fileUrl(name));
   page.offences = offences;
   return page;
 }
@@ -172,5 +174,5 @@ const axisParallelFraction = page => page.evaluate(() => {
 module.exports = {
   section, check, near, between, summary, results,
   readZip, crc32, trkpts, length, gaps, hop,
-  openApp, loadGPX, settle, setControl, clickMode, courses, stats, axisParallelFraction,
+  openApp, openPage, fileUrl, loadGPX, settle, setControl, clickMode, courses, stats, axisParallelFraction,
 };

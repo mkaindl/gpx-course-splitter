@@ -225,6 +225,77 @@ function reconstruct(P){
   }
 
   /* ---------------------------------------------------------------- */
+  section("Legal pages");
+  {
+    const fs = require("fs"), pathm = require("path");
+    const root = pathm.join(__dirname, "..");
+
+    /* The Impressum link has to be reachable from the app at all times.
+       The disclaimer footer is revealed only once a file is loaded, so the
+       legal links live in their own always-visible footer. */
+    const app = await T.openApp(browser);
+    const footer = await app.$eval("#legal", el => {
+      const r = el.getBoundingClientRect();
+      return {shown: r.width > 0 && r.height > 0,
+              links: [...el.querySelectorAll("a")].map(a => a.getAttribute("href"))};
+    }).catch(() => null);
+    check("app shows a legal footer before any file is loaded", !!footer && footer.shown,
+          footer ? "" : "no #legal element found");
+    for(const target of ["impressum.html", "datenschutz.html"])
+      check(`app links to ${target}`, !!footer && footer.links.includes(target),
+            footer ? `found ${footer.links.join(", ")}` : "");
+    track(app); await app.close();
+
+    for(const name of ["impressum.html", "datenschutz.html"]){
+      const page = await T.openPage(browser, name);
+
+      /* keeps the operator's contact details out of search results; the legal
+         duty is about a visitor reaching the page, not about being indexed */
+      const robots = await page.$eval('meta[name="robots"]', e => e.content).catch(() => "");
+      check(`${name}: noindex for search engines`, /noindex/.test(robots), `robots="${robots}"`);
+
+      /* .todo marks content that still has to be filled in. Publishing an
+         Impressum that says so is worse than publishing none, so it is a gate
+         rather than a warning — as is the placeholder scan further down. */
+      const todo = await page.$$eval(".todo", els => els.map(e => e.textContent.trim().slice(0, 50)));
+      check(`${name}: nothing left to fill in`, todo.length === 0, todo.join(" | "));
+
+      track(page); await page.close();
+    }
+
+    /* every local reference must resolve, or the page ships broken */
+    for(const name of ["impressum.html", "datenschutz.html"]){
+      const html = fs.readFileSync(pathm.join(root, name), "utf8");
+      const refs = [...html.matchAll(/(?:href|src)="(?!https?:|mailto:|#)([^"]+)"/g)].map(m => m[1]);
+      const missing = refs.filter(r => !fs.existsSync(pathm.join(root, r)));
+      check(`${name}: all local references resolve`, missing.length === 0,
+            missing.length ? `missing: ${missing.join(", ")}` : `checked ${refs.length}`);
+    }
+    const css = fs.readFileSync(pathm.join(root, "assets", "legal.css"), "utf8");
+    const fontRefs = [...css.matchAll(/url\(([^)]+\.woff2)\)/g)].map(m => m[1]);
+    const missingFonts = fontRefs.filter(f => !fs.existsSync(pathm.join(root, "assets", f)));
+    check("legal.css: all font files present", missingFonts.length === 0 && fontRefs.length > 0,
+          missingFonts.length ? `missing: ${missingFonts.join(", ")}` : `${fontRefs.length} faces`);
+    check("legal.css: fonts are same-origin, not a CDN",
+          !/https?:/.test(css), "a remote font URL would leak visitor IPs");
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Deliberately fails until the real details are filled in. Publishing an
+     Impressum that still reads "[VOLLSTANDIGER NAME]" is worse than not
+     publishing one, so this is a gate rather than a warning. */
+  section("Publish gate");
+  {
+    const fs = require("fs"), pathm = require("path");
+    for(const name of ["impressum.html", "datenschutz.html"]){
+      const html = fs.readFileSync(pathm.join(__dirname, "..", name), "utf8");
+      const left = [...new Set((html.match(/\[[A-ZÄÖÜ][A-ZÄÖÜ0-9 .\-]*\]/g) || []))];
+      check(`${name}: no unfilled placeholders`, left.length === 0,
+            left.length ? `still to fill in: ${left.join(", ")}` : "");
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
   section("Privacy");
   {
     const page = await T.openApp(browser);

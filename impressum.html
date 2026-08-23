@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Impressum — Course Splitter</title>
+<!-- Deliberately no robots.txt Disallow to go with this: a blocked crawler
+     never fetches the page, so it never sees the noindex, and the bare URL
+     can still be indexed from inbound links. Letting it crawl is stricter. -->
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="assets/legal.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="sheet-meta"><span>Course Splitter</span><span><a href="index.html">Zurück zur App</a></span></div>
+  <h1>Impres<em>sum</em></h1>
+  <p class="lede">Angaben nach § 18 Abs. 1 Medienstaatsvertrag (MStV).</p>
+</header>
+
+<section>
+  <h2>Anbieter</h2>
+  <address>
+    <span id="nm">[VOLLSTÄNDIGER VOR- UND NACHNAME]</span><br>
+    [STRASSE UND HAUSNUMMER]<br>
+    [PLZ UND ORT]<br>
+    Deutschland
+  </address>
+  <p class="note todo"><b>Noch auszufüllen.</b> Die Anschrift muss ladungsfähig sein — also eine
+  Adresse, unter der eine Zustellung durch einen Gerichtsvollzieher tatsächlich möglich ist.
+  Ein Postfach genügt dafür nicht.</p>
+</section>
+
+<section>
+  <h2>Kontakt</h2>
+  <p>E-Mail: <span id="mail">[wird angezeigt, sobald JavaScript aktiv ist]</span></p>
+  <noscript><p>E-Mail: <span id="mailfallback">[BENUTZERNAME] [at] [DOMAIN] [punkt] [TLD]</span></p></noscript>
+</section>
+
+<section>
+  <h2>Art des Angebots</h2>
+  <p>Course Splitter ist ein privat betriebenes, kostenfreies Werkzeug ohne Werbung, ohne
+  Sponsoring und ohne Einnahmen jeder Art. Es werden keine Waren oder Dienstleistungen
+  angeboten und es kommt kein Vertrag mit Nutzerinnen und Nutzern zustande.</p>
+  <p>Das Angebot dient damit keinem geschäftsmäßigen Zweck im Sinne des § 5 Digitale-Dienste-Gesetz
+  (DDG). Die Angaben auf dieser Seite erfolgen nach § 18 Abs. 1 MStV, der unabhängig von einer
+  geschäftsmäßigen Tätigkeit für alle Telemedien gilt, die nicht ausschließlich persönlichen oder
+  familiären Zwecken dienen.</p>
+</section>
+
+<section>
+  <h2>Haftung für Inhalte</h2>
+  <p>Course Splitter verarbeitet die hochgeladene GPX-Datei ausschließlich im Browser des
+  Nutzers. Die erzeugten Kursdateien werden nicht auf Richtigkeit oder Vollständigkeit geprüft
+  und sind ausdrücklich <strong>nicht</strong> zur alleinigen Navigation geeignet. Jede Strecke
+  ist vor dem Aufbruch gegen das Original zu prüfen; eine Ersatznavigation ist mitzuführen.</p>
+  <p>Eine Haftung wird nicht ausgeschlossen für Schäden aus der Verletzung des Lebens, des
+  Körpers oder der Gesundheit sowie für Vorsatz und grobe Fahrlässigkeit. Im Übrigen wird das
+  Werkzeug ohne Gewähr bereitgestellt.</p>
+</section>
+
+<section>
+  <h2>Haftung für Links</h2>
+  <p>Diese Seite enthält Verweise auf externe Websites, auf deren Inhalte kein Einfluss besteht.
+  Für diese Inhalte ist stets der jeweilige Anbieter verantwortlich. Zum Zeitpunkt der Verlinkung
+  waren keine Rechtsverstöße erkennbar.</p>
+</section>
+
+<section>
+  <h2>Urheberrecht</h2>
+  <p>Der Quelltext der Anwendung steht unter der im Repository angegebenen Lizenz.
+  Die eingebetteten Schriften (Barlow Condensed, IBM Plex Sans, IBM Plex Mono) stehen unter der
+  SIL Open Font License 1.1; die Lizenzhinweise befinden sich im Kopf der Datei
+  <code>index.html</code>.</p>
+</section>
+
+<p class="lang">English</p>
+<section>
+  <h2>Site notice</h2>
+  <p>This page is the <em>Impressum</em> required of German site operators by § 18 Abs. 1 of the
+  German Interstate Media Treaty (MStV). It names the operator of this site and gives an address
+  at which legal documents can be served. It is published in German because that is the language
+  of the obligation; the details above are the operator's name, street address, postal code and
+  town, followed by the country.</p>
+  <p>Course Splitter is a privately run, free tool with no advertising, no sponsorship and no
+  income of any kind. Nothing is sold here and no contract is formed with users. Output is
+  provided without warranty and is not suitable as a sole means of navigation — check every
+  course against your original route and carry a backup.</p>
+</section>
+
+<footer>
+  <a href="index.html">App</a><a href="datenschutz.html">Datenschutz</a>
+</footer>
+
+</div>
+<script>
+/* The address is deliberately plain text: it has to stay readable for screen
+   readers and it is what the law asks to be plainly available. The e-mail is
+   the part harvesters actually want, so it is assembled at runtime. This stops
+   the regex-over-raw-HTML scrapers that make up the bulk of address harvesting;
+   it does not stop a headless browser, and nothing served publicly can. */
+(function(){
+  /* base64 of the local part and the domain — replace both when filling in
+     the contact address. Nothing secret here; the encoding exists only to
+     keep the address out of reach of scrapers that read the raw HTML. */
+  var u = atob("W0JFTlVUWkVSTkFNRV0=");
+  var d = atob("W0RPTUFJTl0uW1RMRF0=");
+  var a = document.createElement("a");
+  a.href = "mailto:" + u + "@" + d;
+  a.textContent = u + "@" + d;
+  var slot = document.getElementById("mail");
+  slot.textContent = "";
+  slot.appendChild(a);
+})();
+</script>
+</body>
+</html>
