@@ -225,6 +225,102 @@ function reconstruct(P){
   }
 
   /* ---------------------------------------------------------------- */
+  section("Example route");
+  {
+    /* Drawn by the page, not recorded, so the figures below are exact and a
+       change to the generator is meant to fail these. */
+    const TRUE_ASCENT = 3513;   // total positive variation of the clean profile
+    const NAIVE_ASCENT = 8852;  // what summing positive deltas would report
+
+    const page = await T.openApp(browser);
+    const shown = await page.$eval("#demo", el => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }).catch(() => false);
+    check("example is offered before any file is loaded", shown);
+
+    await T.recompute(page, () => page.click("#demo"));
+    const s = await T.stats(page);
+
+    check("example loads without error", s.error === null, s.error || "");
+    check("example is over 150 km", s.origDist > 150, `${s.origDist} km`);
+    check("example is recorded densely enough to be worth thinning",
+          s.origPts >= 10000, `${s.origPts} points`);
+    check("example thins to a fraction of its points", s.kept < s.origPts / 5,
+          `${s.kept} of ${s.origPts}`);
+    check("example needs splitting", s.segments > 1, `${s.segments} courses`);
+
+    /* The point of the noisy elevation: the demo has to exercise the noise
+       handling, not flatter it. Reported ascent must land near the truth and
+       nowhere near what a naive sum of positive deltas would give. */
+    const m = s.note.match(/against\s+(\d+)\s*m/);
+    const reported = m ? +m[1] : NaN;
+    check("example ascent is near the true figure",
+          Math.abs(reported - TRUE_ASCENT) / TRUE_ASCENT < 0.15,
+          `true ${TRUE_ASCENT} m, reported ${reported} m`);
+    check("example elevation is noisy enough to exercise the smoothing",
+          reported < NAIVE_ASCENT * 0.6,
+          `a naive sum over this profile gives ${NAIVE_ASCENT} m; reported ${reported} m`);
+
+    const courses = await T.courses(page);
+    const first = courses.map(f => f.text);
+
+    /* Someone can download these and put them on a watch. The route is
+       invented but the terrain under it is real, so the warning has to travel
+       with the files, not just sit on the page: the course name is the label
+       that survives a download and shows up in Garmin Connect. */
+    check("example course filenames warn against following them",
+          courses.every(f => /do-not-follow/.test(f.name)),
+          courses.map(f => f.name).join(", "));
+    check("the warning is inside the GPX, not only in the filename",
+          courses.every(f => (f.text.match(/<name>[^<]*do-not-follow[^<]*<\/name>/g) || []).length >= 2),
+          "expected the name in both metadata and trk");
+    const warned = await page.$eval("#exNote", el => !el.classList.contains("hidden"));
+    check("app warns on screen while the example is loaded", warned);
+
+    /* Placed at Point Nemo, the oceanic pole of inaccessibility, roughly
+       2700 km from the nearest land. Nothing to walk or ride into. */
+    const all = courses.flatMap(f => T.trkpts(f.text));
+    const lats = all.map(p => p[0]), lons = all.map(p => p[1]);
+    const inOcean = Math.min(...lats) > -49.5 && Math.max(...lats) < -48.0
+                 && Math.min(...lons) > -124.5 && Math.max(...lons) < -122.0;
+    check("example is out in the South Pacific, not on land", inOcean,
+          `lat ${Math.min(...lats).toFixed(3)}..${Math.max(...lats).toFixed(3)}, ` +
+          `lon ${Math.min(...lons).toFixed(3)}..${Math.max(...lons).toFixed(3)}`);
+
+    /* A route that crosses itself is not a plausible tour. The generator is
+       built as a single-valued offset over a smooth spine precisely so this
+       cannot happen; integrating a free heading, which is the obvious
+       approach, produced ten crossings. */
+    const line = reconstruct(courses.map(f => T.trkpts(f.text)));
+    const crossings = T.selfIntersections(T.toPlane(line));
+    check("example route never crosses itself", crossings === 0,
+          `${crossings} crossing(s) over ${line.length} points`);
+
+    track(page); await page.close();
+
+    /* No Math.random in the generator: two visitors must get the same route. */
+    const again = await T.openApp(browser);
+    await T.recompute(again, () => again.click("#demo"));
+    const second = (await T.courses(again)).map(f => f.text);
+    track(again); await again.close();
+    check("example route is deterministic across visits",
+          first.length === second.length && first.every((t, i) => t === second[i]),
+          `${first.length} vs ${second.length} courses`);
+
+    /* ...and the warning must not stick to a real file loaded afterwards */
+    const real = await T.openApp(browser);
+    await T.recompute(real, () => real.click("#demo"));
+    await T.loadGPX(real, fx.winding({n: 6000}).text, "my-ride.gpx");
+    const stuck = await real.$eval("#exNote", el => !el.classList.contains("hidden"));
+    check("warning clears when a real file is loaded next", !stuck);
+    const names = await real.$$eval(".file-name", es => es.map(e => e.textContent));
+    check("a real file keeps its own name", names.every(n => /^my-ride_/.test(n)),
+          names.join(", "));
+    track(real); await real.close();
+  }
+
+  /* ---------------------------------------------------------------- */
   section("Legal pages");
   {
     const fs = require("fs"), pathm = require("path");

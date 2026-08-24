@@ -33,6 +33,23 @@ tricky corner in the preview.
 - Reads `trkpt`, `rtept` and `wpt`; always writes a proper GPX track, which
   fixes files that Garmin Connect rejects as "not a course file"
 - Share sheet on mobile, individual downloads or a ZIP on desktop
+- An example route, for trying the tool without a GPX file to hand
+
+## Example route
+
+"Load an example route" loads a generated 160 km course with switchback climbs,
+for trying the tool without a GPX file to hand. Nothing was taken from anywhere
+to build it, so there is no third-party map data in this repository and nothing
+to attribute.
+
+**It is not a real route.** It sits at Point Nemo, the point in the South
+Pacific furthest from any land, so there is nothing underneath it to follow.
+The courses come out named `example-do-not-follow_1of6.gpx`, and that name is
+written into the GPX metadata too — it is what shows up in Garmin Connect long
+after the page that warned about it is closed.
+
+How the route is built, and why it is built that way, is commented in
+`index.html`.
 
 ## Usage
 

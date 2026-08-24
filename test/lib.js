@@ -19,9 +19,6 @@ function check(name, pass, detail){
 const near = (name, got, want, tol, unit = "") =>
   check(name, Math.abs(got - want) <= tol,
         `expected ${want}${unit} +/- ${tol}${unit}, got ${round(got)}${unit}`);
-const between = (name, got, lo, hi, unit = "") =>
-  check(name, got >= lo && got <= hi,
-        `expected ${round(lo)}..${round(hi)}${unit}, got ${round(got)}${unit}`);
 const round = v => typeof v === "number" ? +v.toFixed(3) : v;
 
 function summary(){
@@ -76,6 +73,42 @@ const trkpts = text => [...text.matchAll(/<trkpt lat="([-\d.]+)" lon="([-\d.]+)"
 const hop = (a, b) => Math.hypot((b[1] - a[1]) * d2r * R * Math.cos(a[0] * d2r), (b[0] - a[0]) * d2r * R);
 function length(P){ let L = 0; for(let i = 1; i < P.length; i++) L += hop(P[i-1], P[i]); return L; }
 function gaps(P){ const g = []; for(let i = 1; i < P.length; i++) g.push(hop(P[i-1], P[i])); return g; }
+
+/* Count proper crossings of a polyline with itself. Segments are bucketed
+   into a grid first, so this stays fast on 20k points. Neighbouring segments
+   share an endpoint by definition and are skipped. */
+function selfIntersections(P, cell = 300){
+  const grid = new Map();
+  for(let i = 0; i < P.length - 1; i++){
+    const a = P[i], b = P[i+1];
+    const x0 = Math.floor(Math.min(a[0], b[0])/cell), x1 = Math.floor(Math.max(a[0], b[0])/cell);
+    const y0 = Math.floor(Math.min(a[1], b[1])/cell), y1 = Math.floor(Math.max(a[1], b[1])/cell);
+    for(let x = x0; x <= x1; x++) for(let y = y0; y <= y1; y++){
+      const k = x + "," + y;
+      if(!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(i);
+    }
+  }
+  const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const proper = (p1, p2, p3, p4) => {
+    const d1 = cross(p3,p4,p1), d2 = cross(p3,p4,p2), d3 = cross(p1,p2,p3), d4 = cross(p1,p2,p4);
+    return ((d1>0&&d2<0)||(d1<0&&d2>0)) && ((d3>0&&d4<0)||(d3<0&&d4>0));
+  };
+  const hits = new Set();
+  for(const list of grid.values())
+    for(let a = 0; a < list.length; a++) for(let b = a+1; b < list.length; b++){
+      const i = list[a], j = list[b];
+      if(Math.abs(i - j) <= 1) continue;
+      if(proper(P[i], P[i+1], P[j], P[j+1])) hits.add(i < j ? i+":"+j : j+":"+i);
+    }
+  return hits.size;
+}
+
+/* project lat/lon pairs to local metres, for the geometry checks above */
+const toPlane = pts => {
+  const [lat0, lon0] = pts[0], k = Math.cos(lat0 * d2r);
+  return pts.map(p => [(p[1]-lon0)*d2r*R*k, (p[0]-lat0)*d2r*R]);
+};
 
 /* ---------------- page driver ---------------- */
 const fileUrl = name => "file://" + path.resolve(__dirname, "..", name);
@@ -172,7 +205,7 @@ const axisParallelFraction = page => page.evaluate(() => {
 });
 
 module.exports = {
-  section, check, near, between, summary, results,
-  readZip, crc32, trkpts, length, gaps, hop,
-  openApp, openPage, fileUrl, loadGPX, settle, setControl, clickMode, courses, stats, axisParallelFraction,
+  section, check, near, summary,
+  trkpts, length, gaps, selfIntersections, toPlane,
+  openApp, openPage, loadGPX, settle, recompute, setControl, clickMode, courses, stats, axisParallelFraction,
 };
