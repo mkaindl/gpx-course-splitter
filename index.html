@@ -356,7 +356,7 @@ footer{padding:26px 0 10px;font-family:"IBM Plex Mono",monospace;font-size:11px;
 "use strict";
 const $ = id => document.getElementById(id);
 const R = 6371008.8;
-const VW = 600, VH = 420, PAD = 20;
+const VW = 600, VH = 420, PAD = 30;
 
 let raw = null;      // {pts, name, fileName, length}
 let proj = null;     // projected metres
@@ -626,14 +626,38 @@ function setTarget(v){
 const getTarget = () => Math.min(P_MAX, Math.max(P_MIN, +$("targetN").value || 1000));
 
 /* ---------------- Map: reproject every frame ---------------- */
+/* Room to keep clear on each side at the fit view. PAD is plain breathing
+   space; the zoom buttons (top right) and the scale bar (bottom left) are HTML
+   laid out in CSS pixels over an SVG that stretches to the column, so how much
+   of the 600x420 frame they cover depends on how wide the map is drawn — on a
+   narrow phone a 34 px button eats nearly twice the frame it does on a desktop.
+   Measure it rather than guess, and reserve a strip the whole way across so
+   the route never runs under them. Capped, so a very narrow window still gets
+   most of the frame for the route. */
+function fitPads(){
+  const w = $("map").getBoundingClientRect().width;
+  const s = w > 0 ? VW/w : VW/680;                 // view units per CSS pixel
+  return {l:PAD, t:PAD,
+          r:Math.min(VW*0.2, Math.max(PAD, 50*s)),   // 10 px offset + 34 px button + gap
+          b:Math.min(VH*0.2, Math.max(PAD, 38*s))};  // 8 px offset + ~25 px bar + gap
+}
 function fitView(){
   let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   for(const p of proj){
     if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
     if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
   }
-  const mpp = Math.max((maxX-minX)/(VW-2*PAD), (maxY-minY)/(VH-2*PAD), 1e-6);
-  view = {cx:(minX+maxX)/2, cy:(minY+maxY)/2, mpp, fit:mpp, bbox:{minX,maxX,minY,maxY}};
+  const p = fitPads();
+  const mpp = Math.max((maxX-minX)/Math.max(40, VW-p.l-p.r),
+                       (maxY-minY)/Math.max(40, VH-p.t-p.b), 1e-6);
+  /* Centred in the frame, then pushed clear of the reserved strips only as far
+     as it has to be — a route that already fits beside them stays centred. */
+  const hw = (maxX-minX)/2/mpp, hh = (maxY-minY)/2/mpp;
+  const ux = Math.max(p.l+hw, Math.min(VW-p.r-hw, VW/2));
+  const uy = Math.max(p.t+hh, Math.min(VH-p.b-hh, VH/2));
+  view = {cx:(minX+maxX)/2 - (ux-VW/2)*mpp,
+          cy:(minY+maxY)/2 + (uy-VH/2)*mpp,
+          mpp, fit:mpp, bbox:{minX,maxX,minY,maxY}};
 }
 const toView = p => ({ x: (p.x-view.cx)/view.mpp + VW/2, y: VH/2 - (p.y-view.cy)/view.mpp });
 
@@ -850,6 +874,11 @@ function load(file, isExample){
       raw.length = cum[cum.length-1];
       allIdx = raw.pts.map((_,i)=>i);
       measureNoise();
+      /* the preview has to be on the page before the fit is worked out: the
+         room the buttons and the scale bar need is measured off the laid-out
+         map, and a hidden one measures zero */
+      $("secPrev").classList.remove("hidden");
+      $("secCtrl").classList.remove("hidden");
       fitView();
 
       $("oPts").textContent = raw.pts.length;
@@ -981,6 +1010,10 @@ const svg = $("map");
 $("zIn").onclick  = ()=> zoomAt(VW/2, VH/2, 1.8);
 $("zOut").onclick = ()=> zoomAt(VW/2, VH/2, 1/1.8);
 $("zRst").onclick = ()=>{ fitView(); requestDraw(); };
+/* The reserved strips are measured in CSS pixels, so a resize changes how much
+   of the frame they take. Re-fit only when the map is already at the fit view;
+   a zoomed-in reader keeps their window. */
+addEventListener("resize", ()=>{ if(view && view.mpp === view.fit){ fitView(); requestDraw(); } });
 
 svg.addEventListener("wheel", e=>{
   if(!view) return;
