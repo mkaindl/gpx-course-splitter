@@ -229,8 +229,8 @@ function reconstruct(P){
   {
     /* Drawn by the page, not recorded, so the figures below are exact and a
        change to the generator is meant to fail these. */
-    const TRUE_ASCENT = 3513;   // total positive variation of the clean profile
-    const NAIVE_ASCENT = 8852;  // what summing positive deltas would report
+    const TRUE_ASCENT = 1400;   // total positive variation of the clean profile
+    const NAIVE_ASCENT = 8443;  // what summing positive deltas would report
 
     const page = await T.openApp(browser);
     const shown = await page.$eval("#demo", el => {
@@ -243,7 +243,7 @@ function reconstruct(P){
     const s = await T.stats(page);
 
     check("example loads without error", s.error === null, s.error || "");
-    check("example is over 150 km", s.origDist > 150, `${s.origDist} km`);
+    check("example is over 40 km", s.origDist > 40, `${s.origDist} km`);
     check("example is recorded densely enough to be worth thinning",
           s.origPts >= 10000, `${s.origPts} points`);
     check("example thins to a fraction of its points", s.kept < s.origPts / 5,

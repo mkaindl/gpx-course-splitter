@@ -36,7 +36,7 @@ tricky corner in the preview.
 
 ## Example route
 
-"Load an example route" loads a generated 160 km course with switchback climbs,
+"Load an example route" loads a generated 43 km course with switchback climbs,
 for trying the tool without a GPX file to hand. **It is not a real route.**
 
 ## Usage

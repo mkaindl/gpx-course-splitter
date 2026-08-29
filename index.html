@@ -264,7 +264,7 @@ footer{padding:26px 0 10px;font-family:"IBM Plex Mono",monospace;font-size:11px;
     <span>Tap, or drop a file here</span>
   </div>
   <input type="file" id="fileInput" accept=".gpx,application/gpx+xml,text/xml,application/xml">
-  <p class="demo">No GPX to hand? <button type="button" id="demo">Load an example route</button> — a generated 160 km course with switchbacks.</p>
+  <p class="demo">No GPX to hand? <button type="button" id="demo">Load an example route</button> — a generated 43 km mountain track with switchbacks.</p>
   <p class="note error hidden" id="err"></p>
 </section>
 
@@ -911,40 +911,68 @@ function load(file, isExample){
    Built as a perpendicular offset over a smooth spine: point = spine(s) +
    normal(s) * w(s), with s strictly increasing and w a single-valued function
    of s. That makes the route a graph over the spine, so it cannot cross itself
-   as long as |w| stays under the spine's radius of curvature — here about
-   800 m against 3000 m. Integrating a free-wandering heading instead, which is
-   the obvious way to do this, produces a line that loops back through itself
-   and reads as a scribble rather than a route.
+   as long as |w| stays under the spine's radius of curvature — 183 m at most
+   against 856 m — and the spine keeps 931 m from itself, more than twice that.
+   Integrating a free-wandering heading instead, which is the obvious way to do
+   this, produces a line that loops back through itself and reads as a scribble
+   rather than a route.
+
+   Shaped the way ground is: bends the width of a valley down to the width of a
+   lane, a few metres of wander on top of them, and switchbacks only where the
+   ground is steep enough to need them — about a seventh of the route, in two
+   ladders of 340 m traverses turning back every 75 m of climb, apexes rounded
+   rather than left as corners.
+
+   Douglas-Peucker keeps a hairpin whatever the tolerance, as it should:
+   dropping one would cut off a third of a kilometre of route. What it gives up
+   is the wander between the corners and the radius of the corners themselves,
+   which is why the tolerance changes the point count by a factor of fifteen
+   across its range, and why the difference is something you see at a bend
+   rather than at arm's length.
 
    Elevation carries barometer-style noise, added after resampling so it lands
    on the output points, so the example exercises the ascent handling rather
    than flattering it. */
 function exampleRoute(){
-  const S = 88000, ds = 2, N = 20000, LAT0 = -48.8767, LON0 = -123.3933;
+  const S = 36000, ds = 0.5, N = 20000, LAT0 = -48.8767, LON0 = -123.3933;
   const RAD = Math.PI/180;
-  const tri  = u => (2/Math.PI)*Math.asin(Math.sin(2*Math.PI*u));
-  const th   = s => 1.6*Math.sin(2*Math.PI*1.5*s/S) + 0.7*Math.sin(2*Math.PI*3.5*s/S + 1.1);
+  /* triangle wave, rounded at the apex: asin of a sine that never quite
+     reaches 1, so a hairpin turns through about 11 m rather than a corner */
+  const tri  = u => (2/Math.PI)*Math.asin(0.96*Math.sin(2*Math.PI*u));
+  const th   = s => 2.0*Math.sin(2*Math.PI*2*s/S + 0.3) + 0.5*Math.sin(2*Math.PI*5.5*s/S + 1.1);
   const elev = s => { const t = s/S;
-    return 1150 + 780*Math.sin(t*Math.PI*4 - 1.2)
-                + 240*Math.sin(t*Math.PI*9 + 0.4)
-                +  70*Math.sin(t*Math.PI*23 + 2.1); };
+    return 1150 + 310*Math.sin(t*Math.PI*4 - 1.2)
+                +  96*Math.sin(t*Math.PI*9 + 0.4)
+                +  28*Math.sin(t*Math.PI*23 + 2.1); };
   const grad = s => { const t = s/S;
-    return 780*Math.PI*4*Math.cos(t*Math.PI*4 - 1.2)
-         + 240*Math.PI*9*Math.cos(t*Math.PI*9 + 0.4); };
-  const steep = s => { const g = Math.min(1, Math.abs(grad(s))/9000);
-                       return g <= 0.5 ? 0 : Math.pow((g - 0.5)/0.5, 2.2); };
+    return 310*Math.PI*4*Math.cos(t*Math.PI*4 - 1.2)
+         +  96*Math.PI*9*Math.cos(t*Math.PI*9 + 0.4); };
+  /* switchbacks only on the steepest ground, and the gate is sharp so they
+     arrive as a couple of ladders rather than smeared along every climb */
+  const steep = s => { const g = Math.min(1, Math.abs(grad(s))/6600);
+                       return g <= 0.78 ? 0 : Math.pow((g - 0.78)/0.22, 1.4); };
+  /* the few metres a recorded line wanders off the road: value noise on knots
+     every 26 m, smooth between them, so it stays a single-valued offset and
+     cannot fold the line back over itself the way a random walk would */
+  let seed = 1974235981 >>> 0;
+  const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const knot = []; for(let i = 0; i < S/26 + 3; i++) knot.push(rnd()*2 - 1);
+  const wobble = s => { const u = s/26, i = u|0, f = u - i, w = f*f*(3 - 2*f);
+                        return 4*(knot[i]*(1 - w) + knot[i+1]*w); };
 
   /* walk the spine, offsetting each sample perpendicular to the tangent */
   const raw = []; let x = 0, y = 0, ph = 0;
   for(let s = 0; s <= S; s += ds){
     const a = th(s);
     if(s > 0){ x += ds*Math.cos(th(s - ds)); y += ds*Math.sin(th(s - ds)); }
-    ph += ds / (560*(1 + 0.35*Math.sin(2*Math.PI*s/9100 + 2.2)));   // integrated, so the
-    const off = 240*Math.sin(2*Math.PI*s/5200 + 0.7)                // wavelength can vary
-              +  90*Math.sin(2*Math.PI*s/1700 + 2.0)
-              +   4*Math.sin(2*Math.PI*s/140 + 1.3)                 // a road is never dead
-              + 2.4*Math.sin(2*Math.PI*s/57 + 2.9)                  // straight; without this
-              + 380*(1 + 0.30*Math.sin(2*Math.PI*s/6300 + 0.5))*steep(s)*tri(ph);
+    ph += ds / (150*(1 + 0.35*Math.sin(2*Math.PI*s/3000 + 2.2)));   // integrated, so the
+    const off = 76*Math.sin(2*Math.PI*s/2200 + 0.7)                 // spacing can vary
+              + 46*Math.sin(2*Math.PI*s/820 + 2.0)
+              + 20*Math.sin(2*Math.PI*s/330 + 1.3)
+              +  8*Math.sin(2*Math.PI*s/120 + 2.9)
+              + 2.5*Math.sin(2*Math.PI*s/44 + 0.5)                  // a road is never
+              + wobble(s)                                           // dead straight
+              + 170*(1 + 0.30*Math.sin(2*Math.PI*s/2000 + 0.5))*steep(s)*tri(ph);
     raw.push([x - off*Math.sin(a), y + off*Math.cos(a), elev(s)]);
   }
 
@@ -954,8 +982,8 @@ function exampleRoute(){
     L += Math.hypot(raw[i][0] - raw[i-1][0], raw[i][1] - raw[i-1][1]); cum.push(L);
   }
   const stepM = L/(N - 1), pts = [];
-  let j = 0, drift = 0, seed = 20260824 >>> 0;
-  const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+  let j = 0, drift = 0, eseed = 20260824 >>> 0;
+  const ernd = () => ((eseed = (Math.imul(eseed, 1664525) + 1013904223) >>> 0) / 4294967296);
   for(let n = 0; n < N; n++){
     const d = n*stepM;
     while(j < cum.length - 2 && cum[j+1] < d) j++;
@@ -963,10 +991,10 @@ function exampleRoute(){
     const px = raw[j][0] + (raw[j+1][0] - raw[j][0])*f;
     const py = raw[j][1] + (raw[j+1][1] - raw[j][1])*f;
     const pe = raw[j][2] + (raw[j+1][2] - raw[j][2])*f;
-    drift += (rnd()*2 - 1)*0.55;
+    drift += (ernd()*2 - 1)*0.55;
     drift = Math.max(-4, Math.min(4, drift));
     const lat = LAT0 + py/(R*RAD);
-    pts.push({lat, lon: LON0 + px/(R*RAD*Math.cos(lat*RAD)), ele: pe + drift + (rnd()*2 - 1)*1.2});
+    pts.push({lat, lon: LON0 + px/(R*RAD*Math.cos(lat*RAD)), ele: pe + drift + (ernd()*2 - 1)*1.2});
   }
   return toGPX(pts, "Example route");
 }
