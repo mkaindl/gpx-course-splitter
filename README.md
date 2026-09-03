@@ -9,14 +9,15 @@ watch draws them at full resolution.
 ## Why
 
 Load a long course onto a Garmin watch and the line it draws is often a poor
-likeness of the route: switchbacks cut off, hairpins straightened. The watch
-isn't broken — it's thinning the course to fit memory, and by all appearances
-it keeps every nth point, saving as much on a straight road as through a set of
-switchbacks.
+likeness of the route: a switchback climb arrives as one diagonal line up the
+slope. The watch isn't broken — it's thinning the course to fit memory, and by
+all appearances it keeps every nth point, saving as much on a straight road as
+through a set of switchbacks.
 
-Douglas–Peucker drops the points that sit on a straight line anyway and keeps
-the ones carrying a bend, so a route can lose most of its points and still look
-right. What's left gets cut into courses that slip under the watch's limit.
+[Douglas–Peucker](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm)
+drops the points that sit on a straight line anyway and keeps the ones carrying
+a bend, so a route can lose most of its points and still look right. What's
+left gets cut into courses that slip under the watch's limit.
 
 The limit isn't published. Reports from watches without built-in maps put it
 around 450–500 points. Treat the defaults as a starting point and check a
